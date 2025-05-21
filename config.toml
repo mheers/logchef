@@ -1,44 +1,30 @@
-# Server configuration
 [server]
-# HTTP server port
 port = 8125
-# HTTP server host address
 host = "0.0.0.0"
-# URL of the frontend application
 frontend_url = "http://localhost:5173"  # Development frontend URL, empty in production
 
-# SQLite database configuration
 [sqlite]
-# Path to the SQLite database file
 path = "local.db"
 
-# OpenID Connect configuration
 [oidc]
-# URL of the OIDC provider for discovery
-provider_url = "http://localhost:5556/dex"
-# Authentication endpoint URL
+# Use explicit URLs for each endpoint instead of discovery
+# Provider URL for OIDC discovery - use service name for container-to-container communication
+provider_url = "http://dex:5556/dex"
+# Browser-facing auth URL - must match the domain/issuer used by DEX for browser communication
 auth_url = "http://localhost:5556/dex/auth"
-# Token endpoint URL
-token_url = "http://localhost:5556/dex/token"
-# Client ID for OIDC authentication
+# Internal container-to-container token URL
+token_url = "http://dex:5556/dex/token"
+
 client_id = "logchef"
-# Client secret for OIDC authentication
 client_secret = "logchef-secret"
-# Callback URL for OIDC authentication
+# Browser-facing redirect URL
 redirect_url = "http://localhost:8125/api/v1/auth/callback"
-# OIDC scopes to request
 scopes = ["openid", "email", "profile"]
 
-# Authentication configuration
 [auth]
-# Email addresses of admin users
 admin_emails = ["admin@logchef.internal"]
-# Duration of user sessions
-session_duration = "8h"
-# Maximum number of concurrent sessions per user
+session_duration = "24h"
 max_concurrent_sessions = 1
 
-# Logging configuration
 [logging]
-# Log level (debug, info, warn, error)
 level = "debug"

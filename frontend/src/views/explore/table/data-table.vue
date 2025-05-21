@@ -366,6 +366,10 @@ function handleResize(e: MouseEvent | TouchEvent, header: any) {
     window.addEventListener('touchend', onEnd, { once: true });
 }
 
+function replay(row) {
+    console.log(row.original)
+}
+
 // Initialize table
 const table = useVueTable({
     get data() {
@@ -707,6 +711,14 @@ const handleDrillDown = (columnName: string, value: any, operator: string = '=')
                             <!-- Check table.getHeaderGroups() exists -->
                             <tr v-if="table.getHeaderGroups().length > 0 && table.getHeaderGroups()[0]"
                                 class="border-b border-b-muted-foreground/10">
+                                <th
+                                :style="{
+                                        width: `70px`,
+                                        minWidth: `70px`,
+                                        maxWidth: `70px`,
+                                    }"
+                                >
+                                <FlexRender :render="''"/></th>
                                 <th v-for="header in table.getHeaderGroups()[0].headers" :key="header.id" scope="col"
                                     class="group relative h-9 text-sm font-medium text-left align-middle bg-muted/30 whitespace-nowrap sticky top-0 z-20 overflow-hidden border-r border-muted/30 p-0"
                                     :class="[
@@ -743,7 +755,7 @@ const handleDrillDown = (columnName: string, value: any, operator: string = '=')
                                             class="absolute right-0 top-0 h-full w-5 cursor-col-resize select-none touch-none flex items-center justify-center hover:bg-muted/40 transition-colors z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                                             @mousedown="(e) => { e.preventDefault(); e.stopPropagation(); handleResize(e, header); }"
                                             @touchstart="(e) => { e.preventDefault(); e.stopPropagation(); handleResize(e, header); }"
-                                            @click.stop title="Resize column">
+                                            @click.stop title="Resize the column">
                                             <!-- Resize Grip Visual -->
                                             <div class="h-full w-4 flex flex-col items-center justify-center">
                                                 <div
@@ -770,6 +782,9 @@ const handleDrillDown = (columnName: string, value: any, operator: string = '=')
                                 <tr class="group cursor-pointer border-b transition-colors hover:bg-muted/30" :class="[
                                     row.getIsExpanded() ? 'expanded-row bg-primary/15' : index % 2 === 0 ? 'bg-transparent' : 'bg-muted/5'
                                 ]" @click="handleRowClick(row)($event)">
+                                <td
+                                @click.stop="replay(row)"
+                                >replay</td>
                                     <td v-for="cell in row.getVisibleCells()" :key="cell.id"
                                         class="px-3 py-2 align-top font-mono text-xs leading-normal overflow-hidden border-r border-muted/20 relative cell-hover-target"
                                         :class="[
