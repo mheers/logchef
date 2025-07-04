@@ -14,7 +14,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger" // Swagger handler
 
 	// Import generated docs (will be created after running swag init)
@@ -31,6 +30,7 @@ type ServerOptions struct {
 	FS           http.FileSystem    // Filesystem for serving static assets (frontend).
 	Logger       *slog.Logger
 	BuildInfo    string
+	Version      string
 }
 
 // Server represents the core HTTP server, encapsulating the Fiber app instance
@@ -44,6 +44,7 @@ type Server struct {
 	fs           http.FileSystem
 	log          *slog.Logger
 	buildInfo    string
+	version      string
 }
 
 // @title LogChef API
@@ -72,6 +73,8 @@ func New(opts ServerOptions) *Server {
 	app := fiber.New(fiber.Config{
 		AppName:               "LogChef API v1",
 		DisableStartupMessage: true, // Avoid default Fiber banner.
+		ReadTimeout:           opts.Config.Server.HTTPServerTimeout,
+		WriteTimeout:          opts.Config.Server.HTTPServerTimeout,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
@@ -85,7 +88,7 @@ func New(opts ServerOptions) *Server {
 	})
 
 	// Add essential middleware.
-	app.Use(recover.New()) // Recover from panics.
+	// app.Use(recover.New()) // Recover from panics.
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed, // Prioritize speed over maximum compression
 	})) // Compress responses
@@ -100,6 +103,7 @@ func New(opts ServerOptions) *Server {
 		fs:           opts.FS,
 		log:          opts.Logger,
 		buildInfo:    opts.BuildInfo,
+		version:      opts.Version,
 	}
 
 	// Register all application routes.
@@ -117,6 +121,7 @@ func (s *Server) setupRoutes() {
 
 	// --- Public Routes ---
 	api.Get("/health", s.handleHealth)
+	api.Get("/meta", s.handleGetMeta)
 
 	// --- Authentication Routes ---
 	api.Get("/auth/login", s.handleLogin)
@@ -126,6 +131,11 @@ func (s *Server) setupRoutes() {
 	// --- Current User ("Me") Routes ---
 	api.Get("/me", s.requireAuth, s.handleGetCurrentUser)
 	api.Get("/me/teams", s.requireAuth, s.handleListCurrentUserTeams)
+	
+	// API Token Management for current user
+	api.Get("/me/tokens", s.requireAuth, s.handleListAPITokens)
+	api.Post("/me/tokens", s.requireAuth, s.handleCreateAPIToken)
+	api.Delete("/me/tokens/:tokenID", s.requireAuth, s.handleDeleteAPIToken)
 
 	// --- Admin Routes ---
 	// These endpoints are only accessible to admin users for global management
@@ -191,6 +201,7 @@ func (s *Server) setupRoutes() {
 		teamSourceOps.Post("/logs/query", s.handleQueryLogs)
 		teamSourceOps.Get("/schema", s.handleGetSourceSchema)
 		teamSourceOps.Post("/logs/histogram", s.handleGetHistogram)
+		teamSourceOps.Post("/generate-sql", s.handleGenerateAISQL)
 
 		// Collections (Saved Queries) scoped to Team & Source
 		// Regular team members can view and use collections
@@ -199,10 +210,10 @@ func (s *Server) setupRoutes() {
 			collections.Get("/", s.handleListTeamSourceCollections)
 			collections.Get("/:collectionID", s.handleGetTeamSourceCollection)
 
-			// Only team admins can manage collections
-			collections.Post("/", s.requireTeamAdminOrGlobalAdmin, s.handleCreateTeamSourceCollection)
-			collections.Put("/:collectionID", s.requireTeamAdminOrGlobalAdmin, s.handleUpdateTeamSourceCollection)
-			collections.Delete("/:collectionID", s.requireTeamAdminOrGlobalAdmin, s.handleDeleteTeamSourceCollection)
+			// Only team editors, team admins, or global admins can manage collections
+			collections.Post("/", s.requireCollectionManagement, s.handleCreateTeamSourceCollection)
+			collections.Put("/:collectionID", s.requireCollectionManagement, s.handleUpdateTeamSourceCollection)
+			collections.Delete("/:collectionID", s.requireCollectionManagement, s.handleDeleteTeamSourceCollection)
 		}
 	}
 

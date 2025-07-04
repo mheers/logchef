@@ -10,7 +10,6 @@ import (
 	"github.com/mr-karan/logchef/pkg/models"
 
 	"github.com/gofiber/fiber/v2"
-	// "github.com/mr-karan/logchef/internal/saved_queries" // Removed
 )
 
 // handleListTeamSourceCollections retrieves saved queries (collections) for a specific team and source.
@@ -39,7 +38,7 @@ func (s *Server) handleListTeamSourceCollections(c *fiber.Ctx) error {
 }
 
 // handleCreateTeamSourceCollection creates a new saved query (collection) for a specific team and source.
-// Assumes requireAuth and requireTeamMember middleware have run.
+// Assumes requireAuth, requireTeamMember, and requireCollectionManagement middleware have run.
 func (s *Server) handleCreateTeamSourceCollection(c *fiber.Ctx) error {
 	teamIDStr := c.Params("teamID")
 	sourceIDStr := c.Params("sourceID")
@@ -143,7 +142,7 @@ func (s *Server) handleGetTeamSourceCollection(c *fiber.Ctx) error {
 }
 
 // handleUpdateTeamSourceCollection updates a saved query (collection).
-// Assumes requireAuth, requireTeamMember, and requireTeamAdminOrGlobalAdmin middleware have run.
+// Assumes requireAuth, requireTeamMember, and requireCollectionManagement middleware have run.
 func (s *Server) handleUpdateTeamSourceCollection(c *fiber.Ctx) error {
 	teamIDStr := c.Params("teamID")
 	sourceIDStr := c.Params("sourceID")
@@ -233,7 +232,7 @@ func (s *Server) handleUpdateTeamSourceCollection(c *fiber.Ctx) error {
 }
 
 // handleDeleteTeamSourceCollection deletes a saved query (collection).
-// Assumes requireAuth, requireTeamMember, and requireTeamAdminOrGlobalAdmin middleware have run.
+// Assumes requireAuth, requireTeamMember, and requireCollectionManagement middleware have run.
 func (s *Server) handleDeleteTeamSourceCollection(c *fiber.Ctx) error {
 	teamIDStr := c.Params("teamID")
 	sourceIDStr := c.Params("sourceID")
@@ -269,7 +268,3 @@ func (s *Server) handleDeleteTeamSourceCollection(c *fiber.Ctx) error {
 
 	return SendSuccess(c, fiber.StatusOK, fiber.Map{"message": "Collection deleted successfully"})
 }
-
-// Note: handleListUserSources moved to source_handlers.go
-
-// Note: handleListUserCollections removed as it's handled by handleListTeamSourceCollections now with filters.
