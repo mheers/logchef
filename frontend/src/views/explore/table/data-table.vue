@@ -367,7 +367,13 @@ function handleResize(e: MouseEvent | TouchEvent, header: any) {
 }
 
 function replay(row) {
-    console.log(row.original)
+    const j = JSON.stringify(row.original)
+    const data = JSON.parse(j)
+    console.log(data)
+
+    const b64 = btoa(j)
+    // const url = `https://logchef.dev/replay/${b64}`
+    console.log(b64)
 }
 
 // Initialize table
