@@ -10,6 +10,9 @@ curl -fsSL https://get.pnpm.io/install.sh | sh -
 wget https://github.com/casey/just/releases/download/1.40.0/just-1.40.0-x86_64-unknown-linux-musl.tar.gz
 tar -xzf just-1.40.0-x86_64-unknown-linux-musl.tar.gz
 sudo mv just /usr/local/bin
+
+# install sqlc
+go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 ```
 
 ## Start dev
